@@ -428,6 +428,11 @@ function GitTabExpansionInternal($lastBlock, $GitStatus = $null) {
             gitIndex $GitStatus $matches['path']
         }
 
+        # Handles git reset -- <path>
+        "^reset.* -- (?<path>\S*)$" {
+            gitIndex $GitStatus $matches['path']
+        }
+
         # Handles git <cmd> <ref>
         "^commit.*-C\s+(?<ref>\S*)$" {
             gitBranches $matches['ref'] $true
