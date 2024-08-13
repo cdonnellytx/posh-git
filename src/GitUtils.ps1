@@ -59,6 +59,39 @@ function Get-GitDirectory {
     }
 }
 
+<#
+.SYNOPSIS
+see if a cherry-pick or revert is in progress, if the user has committed a
+conflict resolution with 'git commit' in the middle of a sequence of picks or
+reverts then CHERRY_PICK_HEAD/REVERT_HEAD will not exist so we have to read
+the todo file.
+#>
+function Get-GitSequencerStatus($gitDir, $sw)
+{
+    if (Test-Path $gitDir/CHERRY_PICK_HEAD) {
+        dbg 'Found CHERRY_PICK_HEAD' $sw
+        return '|CHERRY-PICKING'
+    }
+
+    if (Test-Path $gitDir/REVERT_HEAD) {
+        dbg 'Found REVERT_HEAD' $sw
+        return '|REVERTING'
+    }
+
+    if (Test-Path $gitDir/sequencer/todo) {
+        dbg 'Found sequencer/todo' $sw
+        $todo = "$(Get-Content $gitDir/sequencer/todo)"
+        switch -regex ($todo)
+        {
+            '^(?:p|pick)\[ \t\]' { return '|CHERRY_PICKING' }
+            '^revert\[ \t\]' { return'|REVERTING' }
+        }
+    }
+
+    # Not a sequencer
+    return $null
+}
+
 function Get-GitBranch($branch = $null, $gitDir = $(Get-GitDirectory), [switch]$isDotGitOrBare, [Diagnostics.Stopwatch]$sw) {
     if (!$gitDir) { return }
 
@@ -95,13 +128,7 @@ function Get-GitBranch($branch = $null, $gitDir = $(Get-GitDirectory), [switch]$
                 dbg 'Found MERGE_HEAD' $sw
                 $r = '|MERGING'
             }
-            elseif (Test-Path $gitDir/CHERRY_PICK_HEAD) {
-                dbg 'Found CHERRY_PICK_HEAD' $sw
-                $r = '|CHERRY-PICKING'
-            }
-            elseif (Test-Path $gitDir/REVERT_HEAD) {
-                dbg 'Found REVERT_HEAD' $sw
-                $r = '|REVERTING'
+            elseif ($r = Get-GitSequencerStatus $gitDir $sw) {
             }
             elseif (Test-Path $gitDir/BISECT_LOG) {
                 dbg 'Found BISECT_LOG' $sw
