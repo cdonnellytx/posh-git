@@ -68,16 +68,10 @@ function Get-GitBranch($branch = $null, $gitDir = $(Get-GitDirectory), [switch]$
         $step = ''; $total = ''
         if (Test-Path $gitDir/rebase-merge) {
             dbg 'Found rebase-merge' $sw
-            if (Test-Path $gitDir/rebase-merge/interactive) {
-                dbg 'Found rebase-merge/interactive' $sw
-                $r = '|REBASE-i'
-            }
-            else {
-                $r = '|REBASE-m'
-            }
             $b = "$(Get-Content $gitDir/rebase-merge/head-name)"
             $step = "$(Get-Content $gitDir/rebase-merge/msgnum)"
             $total = "$(Get-Content $gitDir/rebase-merge/end)"
+            $r = '|REBASE'
         }
         else {
             if (Test-Path $gitDir/rebase-apply) {
