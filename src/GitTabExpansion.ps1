@@ -230,7 +230,7 @@ function script:gitIndex($GitStatus, $filter) {
 }
 
 function script:gitAddFiles($GitStatus, $filter) {
-    gitFiles $filter (@($GitStatus.Working.Unmerged) + @($GitStatus.Working.Modified) + @($GitStatus.Working.Added))
+    gitFiles $filter @($GitStatus.Working)
 }
 
 function script:gitCheckoutFiles($GitStatus, $filter) {
