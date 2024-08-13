@@ -137,6 +137,11 @@ function script:gitBranches($filter, $includeHEAD = $false, $prefix = '') {
         $prefix += $matches['from']
         $filter = $matches['to']
     }
+    elseif ($filter -like '^*') {
+        # ^foo
+        $filter = $filter.Substring(1)
+        $prefix += '^'
+    }
 
     $branches = @(git branch --no-color | ForEach-Object { if (($_ -notmatch "^\* \(HEAD detached .+\)$") -and ($_ -match "^[\*\+]?\s*(?<ref>\S+)(?: -> .+)?")) { $matches['ref'] } }) +
                 @(git branch --no-color -r | ForEach-Object { if ($_ -match "^  (?<ref>\S+)(?: -> .+)?") { $matches['ref'] } }) +
@@ -171,6 +176,15 @@ function script:gitConfigKeys($section, $filter, $defaultOptions = '') {
 }
 
 function script:gitTags($filter, $prefix = '') {
+    if ($filter -match "^(?<from>\S*\.{2,3})(?<to>.*)") {
+        $prefix += $matches['from']
+        $filter = $matches['to']
+    }
+    elseif ($filter -like '^*') {
+        # ^foo
+        $filter = $filter.Substring(1)
+        $prefix += '^'
+    }
     git tag |
         Where-Object { $_ -like "$filter*" } |
         ForEach-Object { $prefix + $_ } |
