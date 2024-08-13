@@ -471,11 +471,14 @@ function GitTabExpansionInternal($lastBlock, $GitStatus = $null) {
         }
 
         # Handles git checkout|switch <ref>
-        "^(?:checkout|switch).* (?<ref>\S*)$" {
+        "^(?<cmd>checkout|switch).* (?<ref>\S*)$" {
             & {
                 gitBranches $matches['ref'] $true
                 gitRemoteUniqueBranches $matches['ref']
-                gitTags $matches['ref']
+                # `switch` does not handle tags, but `checkout` does
+                if ($matches['cmd'] -eq 'checkout') {
+                    gitTags $matches['ref']
+                }
                 # Return only unique branches (to eliminate duplicates where the branch exists locally and on the remote)
             } | Select-Object -Unique
         }
