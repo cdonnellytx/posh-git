@@ -3,6 +3,8 @@
 
 $Global:GitTabSettings = New-Object PSObject -Property @{
     AllCommands = $false
+    AliasCache = @{
+    }
     KnownAliases = @{
         '!f() { exec vsts code pr "$@"; }; f' = 'vsts.pr'
     }
@@ -259,17 +261,24 @@ function script:gitAliases($filter) {
 }
 
 function script:expandGitAlias($cmd, $rest) {
+    if ($Global:GitTabSettings.AliasCache.Contains($cmd))
+    {
+        return 'git {0}{1}' -f $Global:GitTabSettings.AliasCache[$cmd], $rest
+    }
     $alias = git config "alias.$cmd"
 
     if ($alias) {
         $known = $Global:GitTabSettings.KnownAliases[$alias]
         if ($known) {
+            $Global:GitTabSettings.AliasCache[$cmd] = $known
             return "git $known$rest"
         }
 
+        $Global:GitTabSettings.AliasCache[$cmd] = $alias
         return "git $alias$rest"
     }
     else {
+        $Global:GitTabSettings.AliasCache[$cmd] = $cmd
         return "git $cmd$rest"
     }
 }
