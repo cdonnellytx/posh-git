@@ -333,7 +333,11 @@ function Get-GitBranchStatusColor {
 
     $branchStatusTextSpan = [PoshGitTextSpan]::new($s.BranchColor)
 
-    if (($Status.BehindBy -ge 1) -and ($Status.AheadBy -ge 1)) {
+    if ($Status.UpstreamGone -eq $true){
+        # Upstream branch is gone
+        $branchStatusTextSpan = [PoshGitTextSpan]::new($s.BranchGoneStatusSymbol)
+    }
+    elseif (($Status.BehindBy -ge 1) -and ($Status.AheadBy -ge 1)) {
         # We are both behind and ahead of remote
         $branchStatusTextSpan = [PoshGitTextSpan]::new($s.BranchBehindAndAheadStatusSymbol)
     }
