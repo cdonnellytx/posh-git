@@ -493,6 +493,20 @@ function GitTabExpansionInternal($lastBlock, $GitStatus = $null) {
             gitBranches $matches['ref']
         }
 
+        # Handles
+        #   - git log|show -- <path>
+        #   - git log|show <ref> -- <path>
+        "^(?<cmd>log|show)\b.*?(?: (?<ref>[^\s-]\S*).*?)? -- (?<files>\S*)$" {
+            [string[]] $files = if ($matches['ref']) {
+                # List should match the files for that ref
+                Invoke-Utf8ConsoleCommand { git diff-tree --no-commit-id --name-only $matches['ref'] -r 2>$null }
+            } else {
+                $GitStatus.Working + $GitStatus.Index | Select-Object -Unique
+            }
+            gitFiles $matches['files'] $files
+            break
+        }
+
         # Handles git <cmd> <ref>
         "^(?:cherry|cherry-pick|diff|difftool|log|merge|rebase|reflog\s+show|reset|revert|show).* (?<ref>\S*)$" {
             gitBranches $matches['ref'] $true
